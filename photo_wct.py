@@ -167,5 +167,17 @@ class PhotoWCT(nn.Module):
     def is_cuda(self):
         return next(self.parameters()).is_cuda
 
-    def forward(self, *input):
-        pass
+    def forward(self, x):
+        f1 = self.e1.forward(x)
+        y1 = self.d1.forward(f1)
+
+        f2, pool1_idx, pool1_size = self.e2.forward(x)
+        y2 = self.d2.forward(f2, pool1_idx=pool1_idx, pool1_size=pool1_size)
+
+        f3, pool1_idx, pool1_size, pool2_idx, pool2_size = self.e3.forward(x)
+        y3 = self.d3.forward(f2, pool1_idx=pool1_idx, pool1_size=pool1_size, pool2_idx=pool2_idx, pool2_size=pool2_size)
+
+        f4, pool1_idx, pool1_size, pool2_idx, pool2_size, pool3_idx, pool3_size = self.e4.forward(x)
+        y4 = self.d4.forward(f2, pool1_idx=pool1_idx, pool1_size=pool1_size, pool2_idx=pool2_idx, pool2_size=pool2_size, pool3_idx=pool3_idx, pool3_size=pool3_size)
+
+        return y1, y2, y3, y4
