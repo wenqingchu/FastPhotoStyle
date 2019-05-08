@@ -21,7 +21,7 @@ class PhotoWCT(nn.Module):
         self.d3 = VGGDecoder(3)
         self.e4 = VGGEncoder(4)
         self.d4 = VGGDecoder(4)
-    
+
     def transform(self, cont_img, styl_img, cont_seg, styl_seg):
         self.__compute_label_info(cont_seg, styl_seg)
 
@@ -118,41 +118,41 @@ class PhotoWCT(nn.Module):
         target_feature = target_feature.view_as(cont_feat)
         ccsF = target_feature.float().unsqueeze(0)
         return ccsF
-    
+
     def __wct_core(self, cont_feat, styl_feat):
         cFSize = cont_feat.size()
         c_mean = torch.mean(cont_feat, 1)  # c x (h x w)
         c_mean = c_mean.unsqueeze(1).expand_as(cont_feat)
         cont_feat = cont_feat - c_mean
-        
+
         iden = torch.eye(cFSize[0])  # .double()
         if self.is_cuda:
             iden = iden.cuda()
-        
+
         contentConv = torch.mm(cont_feat, cont_feat.t()).div(cFSize[1] - 1) + iden
         # del iden
         c_u, c_e, c_v = torch.svd(contentConv, some=False)
         # c_e2, c_v = torch.eig(contentConv, True)
         # c_e = c_e2[:,0]
-        
+
         k_c = cFSize[0]
         for i in range(cFSize[0] - 1, -1, -1):
             if c_e[i] >= 0.00001:
                 k_c = i + 1
                 break
-        
+
         sFSize = styl_feat.size()
         s_mean = torch.mean(styl_feat, 1)
         styl_feat = styl_feat - s_mean.unsqueeze(1).expand_as(styl_feat)
         styleConv = torch.mm(styl_feat, styl_feat.t()).div(sFSize[1] - 1)
         s_u, s_e, s_v = torch.svd(styleConv, some=False)
-        
+
         k_s = sFSize[0]
         for i in range(sFSize[0] - 1, -1, -1):
             if s_e[i] >= 0.00001:
                 k_s = i + 1
                 break
-        
+
         c_d = (c_e[0:k_c]).pow(-0.5)
         step1 = torch.mm(c_v[:, 0:k_c], torch.diag(c_d))
         step2 = torch.mm(step1, (c_v[:, 0:k_c].t()))
@@ -162,7 +162,7 @@ class PhotoWCT(nn.Module):
         targetFeature = torch.mm(torch.mm(torch.mm(s_v[:, 0:k_s], torch.diag(s_d)), (s_v[:, 0:k_s].t())), whiten_cF)
         targetFeature = targetFeature + s_mean.unsqueeze(1).expand_as(targetFeature)
         return targetFeature
-    
+
     @property
     def is_cuda(self):
         return next(self.parameters()).is_cuda
@@ -171,13 +171,16 @@ class PhotoWCT(nn.Module):
         f1 = self.e1.forward(x)
         y1 = self.d1.forward(f1)
 
+
         f2, pool1_idx, pool1_size = self.e2.forward(x)
         y2 = self.d2.forward(f2, pool1_idx=pool1_idx, pool1_size=pool1_size)
 
+
         f3, pool1_idx, pool1_size, pool2_idx, pool2_size = self.e3.forward(x)
-        y3 = self.d3.forward(f2, pool1_idx=pool1_idx, pool1_size=pool1_size, pool2_idx=pool2_idx, pool2_size=pool2_size)
+        y3 = self.d3.forward(f3, pool1_idx=pool1_idx, pool1_size=pool1_size, pool2_idx=pool2_idx, pool2_size=pool2_size)
+
 
         f4, pool1_idx, pool1_size, pool2_idx, pool2_size, pool3_idx, pool3_size = self.e4.forward(x)
-        y4 = self.d4.forward(f2, pool1_idx=pool1_idx, pool1_size=pool1_size, pool2_idx=pool2_idx, pool2_size=pool2_size, pool3_idx=pool3_idx, pool3_size=pool3_size)
+        y4 = self.d4.forward(f4, pool1_idx=pool1_idx, pool1_size=pool1_size, pool2_idx=pool2_idx, pool2_size=pool2_size, pool3_idx=pool3_idx, pool3_size=pool3_size)
 
         return y1, y2, y3, y4

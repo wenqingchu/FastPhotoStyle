@@ -7,8 +7,10 @@ data/
 logs/
 examples
 .idea/
+face/
 notebooks/.ipynb_checkpoints/*
 *.tar.gz
 *.zip
 *.pkl
 *.pyc
+*.pth
