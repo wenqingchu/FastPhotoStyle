@@ -24,7 +24,7 @@ p_wct.load_state_dict(torch.load(args.model))
 num_epochs = 1000
 batch_size = 16
 
-traindir = 'face/'
+traindir = 'caricature/'
 train_dataset = datasets.ImageFolder(
     traindir,
     transforms.Compose([

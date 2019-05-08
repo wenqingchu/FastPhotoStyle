@@ -8,6 +8,7 @@ logs/
 examples
 .idea/
 face/
+caricature/
 notebooks/.ipynb_checkpoints/*
 *.tar.gz
 *.zip
